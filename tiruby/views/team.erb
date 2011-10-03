@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta http-equiv="Content-Style-Type" content="text/css" />
+		<meta http-equiv="Content-Script-Type" content="text/javascript" />
+		<link rel="stylesheet" href="/ti.css" type="text/css" title="team-icon" />
+		<title>Team Icon</title>
+	</head>
+	<body>
+		<%= acc %>
+		<h1><a href="/">Team Icon</a></h1>
+		<h2>TEAM <%= escaped_tname %></h2>
+
+		<div class="ti-section">
+			<h3>アイコン一覧</h3>
+			<% if ticons.length > 0 %>
+				<ul class="icon-list">
+				<% ticons.each{|ti| %>
+					<li><img src="/dyn-image/<%= ti['name'] %>" height="96px" />
+					<% if is_admin %>
+						<form class="quick-delete" method="post" action="/remove-team-icon"><input type="submit" value="× 削除" />
+							<%= post_tok %><input type="hidden" name="tname" value="<%= escaped_tname %>" />
+							<input type="hidden" name="iname" value="<%= ti['name'] %>" />
+						</form>
+					<% end %>
+					</li>
+				<% } %>
+				</ul>
+			<% else %>
+				<p class="noent">アイコンが登録されていません</p>
+			<% end %>
+
+			<% if is_admin %>
+				<div>
+					<form method="post" action="/dyn-image" enctype="multipart/form-data">
+						<%= post_tok %>
+						<input type="hidden" name="tname" value="<%= escaped_tname %>" />
+						<input type="file" name="file"><input type="submit" value="アップロード"> (1MBまで)
+					</form>
+				</div>
+			<% end %>
+		</div>
+
+		<div class="ti-section">
+			<h3>メンバー</h3>
+			<% if members.length > 0 %>
+				<ul>
+				<% members.each{|m| %>
+					<li><a target="_blank" href="http://twitter.com/<%= m['name'] %>"><%= m['name'] %></a></li>
+				<% } %>
+				</ul>
+			<% else %>
+				<p class="noent">いません</p>
+			<% end %>
+
+			<% if twname %>
+				<% if in_team %>
+					<div class="youre-here">あなたはこのチームに参加しています</div>
+					<form action="/team/member" method="post" id="remove-me">
+						<%= post_tok %>
+						<input type="hidden" name="tname" value="<%= escaped_tname %>" />
+						<input type="hidden" name="op" value="delete" />
+						<input type="submit" value="<%= twname %> をこのチームから削除" />
+					</form>
+				<% else %>
+					<form action="/team/member" method="post" id="add-me">
+						<%= post_tok %>
+						<input type="hidden" name="tname" value="<%= escaped_tname %>"></input>
+						<input type="submit" value="<%= twname %> を登録する"></input>
+					</form>
+				<% end %>
+			<% end %>
+		</div>
+
+		<% if in_team && is_admin %>
+			<div class="ti-section" style="margin-top: 1em">
+				<form action="/run-shuffle" method="post" id="shuffle-form">
+					<%= post_tok %>
+					<input type="hidden" name="tname" value="<%= escaped_tname %>"></input>
+					<input type="submit" value="シャッフル実行"></input>
+				</form>
+			</div>
+		<% end %>
+	</body>
+</html>
