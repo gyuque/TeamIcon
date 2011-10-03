@@ -1,0 +1,10 @@
+group :production do
+  source :rubygems
+  gem 'rack'
+  gem "sinatra"
+  gem "oauth"
+  gem "redis-objects"
+  gem "rack_csrf"
+  gem "shared-mime-info"
+end
+

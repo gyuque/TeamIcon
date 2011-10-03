@@ -1,0 +1,6 @@
+www:
+  type: ruby
+  approot: tiruby
+
+store:
+  type: redis
