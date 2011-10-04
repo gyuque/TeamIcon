@@ -398,6 +398,10 @@ end
 # チーム情報表示（アイコン一覧、メンバー一覧）
 get '/team/:tname' do |tname|
 	require 'uri'
+
+	flash_message = session[:flash_message]
+	session[:flash_message] = nil
+
 	tname = params['tname']
 	tls = TeamList.new
 	team = tls.find(tname)
@@ -419,7 +423,7 @@ get '/team/:tname' do |tname|
 
 	erb :team, :locals => {:escaped_tname => wrap_tstr(CGI.escapeHTML(team_obj.name)), :twname => twname, :pe_tname => pename, :in_team => !!me,
 	            :ticons => icon_list, :members => member_vars, :acc => wrap_tstr(account_disp(session, "/team/#{pename}")), :post_tok => Rack::Csrf.csrf_tag(env),
-	            :is_admin => is_login_admin(session)}
+	            :is_admin => is_login_admin(session), :flash_message => flash_message}
 end
 
 get '/dyn-image/:name' do |name|
@@ -479,6 +483,22 @@ post '/remove-team-icon' do
 	tname = params['tname'].force_encoding('utf-8')
 	Team.remove_icon(tname, iname)
 	redirect "/team/#{ URI.encode(tname) }"
+end
+
+post '/use-team-icon' do
+	post_tok = Rack::Csrf.csrf_token(env)
+	auth = session[:auth_info]
+	return 403 if params['_csrf'] != post_tok
+	return 403 if not auth
+
+	require './icon-api'
+	cs = oauth_cs
+	image_info = Team.get_icon(params['iname'])
+	update_profile_image(image_info[0], image_info[1], cs, auth.token, auth.secret)
+
+	tname = params['tname']
+	session[:flash_message] = "icon.used" if tname
+	redirect tname ? "/team/#{ URI.encode(tname.force_encoding('utf-8')) }" : '/'
 end
 
 post '/team/member' do

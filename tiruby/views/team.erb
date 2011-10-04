@@ -19,6 +19,13 @@
 				<ul class="icon-list">
 				<% ticons.each{|ti| %>
 					<li><img src="/dyn-image/<%= ti['name'] %>?prefer_thumb=1" height="96px" />
+					<% if twname %>
+						<form class="quick-use" method="post" action="/use-team-icon"><input type="submit" value="✓ 使用" />
+							<%= post_tok %>
+							<input type="hidden" name="tname" value="<%= escaped_tname %>" />
+							<input type="hidden" name="iname" value="<%= ti['name'] %>" />
+						</form>
+					<% end %>
 					<% if is_admin %>
 						<form class="quick-delete" method="post" action="/remove-team-icon"><input type="submit" value="× 削除" />
 							<%= post_tok %><input type="hidden" name="tname" value="<%= escaped_tname %>" />
@@ -30,6 +37,10 @@
 				</ul>
 			<% else %>
 				<p class="noent">アイコンが登録されていません</p>
+			<% end %>
+
+			<% if flash_message == 'icon.used' %>
+				<p class="fmessage">Twiterのアイコンを変更しました</p>
 			<% end %>
 
 			<% if is_admin %>

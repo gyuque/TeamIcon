@@ -61,6 +61,14 @@ h2 {
 	display: inline;
 }
 
+.fmessage {
+	margin: 1px;
+	padding: 4px;
+	border: 1px solid #394;
+	background-color: #dfe;
+	color: #000;
+}
+
 .icon-list {
 	padding: 0.5em;
 	margin: 0;
@@ -127,6 +135,11 @@ h3 {
 	background-color: #fd0;
 }
 
+.quick-use input {
+	background-color: #294; color: #fff; font-weight: bold;
+	border: 1px solid #fff; cursor: pointer; font-size: 11px;
+}
+
 .quick-delete input {
 	background-color: #d00; color: #fff; font-weight: bold;
 	border: 1px solid #fff; cursor: pointer; font-size: 8px;
@@ -138,5 +151,14 @@ li:hover .quick-delete {
 	bottom: 1px;
 	right: 1px;
 }
+
+.quick-use { display: none; }
+li:hover .quick-use {
+	display: inline;
+	position: absolute;
+	bottom: 1px;
+	left: -1px;
+}
+
 
 #shuffle-form input {width:100%; color: #fff; background-color: #000;}
