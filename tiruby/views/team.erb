@@ -18,7 +18,7 @@
 			<% if ticons.length > 0 %>
 				<ul class="icon-list">
 				<% ticons.each{|ti| %>
-					<li><img src="/dyn-image/<%= ti['name'] %>" height="96px" />
+					<li><img src="/dyn-image/<%= ti['name'] %>?prefer_thumb=1" height="96px" />
 					<% if is_admin %>
 						<form class="quick-delete" method="post" action="/remove-team-icon"><input type="submit" value="× 削除" />
 							<%= post_tok %><input type="hidden" name="tname" value="<%= escaped_tname %>" />

@@ -21,6 +21,7 @@ def determine_production()
 
 	return true
 end
+require File.expand_path(File.dirname(__FILE__)) + '/thumbnailer'
 require File.expand_path(File.dirname(__FILE__)) + '/secret-settings'
 PRODUCTION = determine_production()
 
@@ -246,16 +247,40 @@ class Team
 		"image//#{img_name}//mime"
 	end
 
-	def self.get_icon(name)
+	def self.img_thumb_key(img_name)
+		"image//#{img_name}//thumb"
+	end
+
+	def self.update_thumbnail(name, blob)
+		require 'base64'
 		ensure_redis
-		return [Base64.decode64( Redis::Value.new( self.img_key(name) ).value ),
+		ik = self.img_key(name)
+		if $redis.get(ik)
+			v = Redis::Value.new(self.img_thumb_key(name))
+			v.value = Base64.encode64(wrap_ustr(blob))
+		end
+	end
+
+	def self.get_icon(name)
+		require 'base64'
+		ensure_redis
+		ik = self.img_key(name)
+		ival = $redis.get(ik)
+		return nil if not ival
+
+		ress = [Base64.decode64( ival ),
 		        Redis::Value.new( self.img_mime_key(name) ).value ]
+
+		thval = $redis.get(self.img_thumb_key(name))
+		ress << Base64.decode64(thval) if thval
+
+		return ress
 	end
 end
 
 def account_disp(ses, retpath = nil)
 	if not ses[:auth_info]
-		return "<div class=\"account-info\"><a href=\"/connect\">Twitter アカウントを利用</a></div>"
+		return "<div class=\"account-info oauth-trigger\"><a href=\"/connect\">Twitter アカウントを利用</a></div>"
 	else
 		return "<div class=\"account-info\">Twitter アカウント: #{ CGI.escapeHTML(ses[:auth_info].params[:screen_name]) } <form id=\"remove-session\" method=\"post\" action=\"/logout\">#{ Rack::Csrf.csrf_tag(env) }<input type=\"submit\" value=\"ログアウト\"></form></div>"
 	end
@@ -333,6 +358,32 @@ get '/images/authbar.png' do
   send_file "images/authbar.png"
 end
 
+get '/admin' do
+	if not is_login_admin(session)
+		return 403
+	end
+	
+	erb :admin, :locals => {:post_tok => Rack::Csrf.csrf_tag(env)}
+end
+
+post '/rebuild-thumbnail' do
+	return 403 if not is_login_admin(session)
+	post_tok = Rack::Csrf.csrf_token(env)
+	return 403 if params['_csrf'] != post_tok
+	
+	iname = params['iname']
+	imgdat = Team.get_icon(iname)
+	if imgdat
+		th = Thumbnailer.direct_generate(imgdat[0])
+		Team.update_thumbnail(iname, th)
+	else
+		return 404
+	end
+
+	"ok"
+end
+
+
 post '/team' do
 	if not is_login_admin(session)
 		return 403
@@ -375,7 +426,9 @@ get '/dyn-image/:name' do |name|
 	img = Team.get_icon(name)
 	headers['Cache-Control'] = 'public, max-age=1800'
 	content_type img[1]
+	pthumb = params['prefer_thumb'] && (params['prefer_thumb'].to_i == 1)
 
+	return img[2] if pthumb && img.length > 2 && img[2]
 	img[0]
 end
 
