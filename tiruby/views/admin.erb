@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta http-equiv="Content-Style-Type" content="text/css" />
+		<meta http-equiv="Content-Script-Type" content="text/javascript" />
+		<link rel="stylesheet" href="/ti.css" type="text/css" title="team-icon" />
+		<title>Admin - Team Icon</title>
+	</head>
+	<body>
+			<form action="/rebuild-thumbnail" method="post">
+				<%= post_tok %>
+				<input size="44" type="text" name="iname" />
+				<input type="submit" value="build thumbnail"></input>
+			</form>
+	</body>
+</html>
