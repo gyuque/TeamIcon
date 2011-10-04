@@ -6,5 +6,6 @@ group :production do
   gem "redis-objects"
   gem "rack_csrf"
   gem "shared-mime-info"
+  gem "rmagick"
 end
 
