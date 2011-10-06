@@ -85,7 +85,7 @@
 			<% end %>
 		</div>
 
-		<% if in_team && is_admin %>
+		<% if in_team && has_shuffle %>
 			<div class="ti-section" style="margin-top: 1em">
 				<form action="/run-shuffle" method="post" id="shuffle-form">
 					<%= post_tok %>

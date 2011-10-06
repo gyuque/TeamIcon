@@ -40,11 +40,23 @@ def is_admin(uid)
 	return false
 end
 
+def is_shuffle_user(uid)
+	i = uid.to_i
+	return i == 19289830 || i == 317644784
+end
+
 def is_login_admin(ses)
 	a = ses[:auth_info]
 	return false if not a
 
 	return is_admin(a.params['user_id'])
+end
+
+def has_shuffle_permission(ses)
+	a = ses[:auth_info]
+	return false if not a
+
+	return is_admin(a.params['user_id']) || is_shuffle_user(a.params['user_id'])
 end
 
 def ensure_redis
@@ -423,7 +435,7 @@ get '/team/:tname' do |tname|
 
 	erb :team, :locals => {:escaped_tname => wrap_tstr(CGI.escapeHTML(team_obj.name)), :twname => twname, :pe_tname => pename, :in_team => !!me,
 	            :ticons => icon_list, :members => member_vars, :acc => wrap_tstr(account_disp(session, "/team/#{pename}")), :post_tok => Rack::Csrf.csrf_tag(env),
-	            :is_admin => is_login_admin(session), :flash_message => flash_message}
+	            :is_admin => is_login_admin(session), :has_shuffle => has_shuffle_permission(session), :flash_message => flash_message}
 end
 
 get '/dyn-image/:name' do |name|
@@ -531,7 +543,7 @@ post '/team/member' do
 end
 
 post '/run-shuffle' do
-	if not is_login_admin(session)
+	if not has_shuffle_permission(session)
 		return 403
 	end
 
