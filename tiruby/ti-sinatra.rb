@@ -41,8 +41,9 @@ def is_admin(uid)
 end
 
 def is_shuffle_user(uid)
-	i = uid.to_i
-	return i == 19289830 || i == 317644784
+	return false
+	#i = uid.to_i
+	#return i == 19289830 || i == 317644784
 end
 
 def is_login_admin(ses)
@@ -288,6 +289,23 @@ class Team
 
 		return ress
 	end
+
+	def shuffle_user_key
+		"#{@keyname}//shuffke-user-id"
+	end
+
+	def shuffle_user_id
+		ensure_redis
+		i = $redis.get(self.shuffle_user_key)
+		return 0 if not i
+		
+		i.to_i
+	end
+
+	def shuffle_user_id=(i)
+		ensure_redis
+		Redis::Value.new(self.shuffle_user_key).value = i
+	end
 end
 
 def account_disp(ses, retpath = nil)
@@ -420,14 +438,16 @@ get '/team/:tname' do |tname|
 	auth = session[:auth_info]
 	twname = auth ? CGI.escapeHTML(auth.params[:screen_name]) : nil
 
-	if not team
-		return 404
-	end
+	return 404 if not team
 
 	team_obj = Team.new(team['name'])
+	shi = team_obj.shuffle_user_id
+	shu = team_obj.members.find{|m| m['id'].to_i == shi }
+
 	icon_list   = team_obj.icon_list
 	me = auth ? team_obj.in_team(auth.params['user_id']) : nil
 	pename = URI.encode(team_obj.name)
+	i_am_shuffle_user = me ? (me['id'].to_i == shi) : false
 
 	member_vars = team_obj.members.map{|m|
 		{'name' => CGI.escapeHTML(m['screen_name'])}
@@ -435,7 +455,7 @@ get '/team/:tname' do |tname|
 
 	erb :team, :locals => {:escaped_tname => wrap_tstr(CGI.escapeHTML(team_obj.name)), :twname => twname, :pe_tname => pename, :in_team => !!me,
 	            :ticons => icon_list, :members => member_vars, :acc => wrap_tstr(account_disp(session, "/team/#{pename}")), :post_tok => Rack::Csrf.csrf_tag(env),
-	            :is_admin => is_login_admin(session), :has_shuffle => has_shuffle_permission(session), :flash_message => flash_message}
+	            :is_admin => is_login_admin(session), :has_shuffle => has_shuffle_permission(session) || i_am_shuffle_user, :flash_message => flash_message, :shuffle_user => shu}
 end
 
 get '/dyn-image/:name' do |name|
@@ -543,35 +563,36 @@ post '/team/member' do
 end
 
 post '/run-shuffle' do
-	if not has_shuffle_permission(session)
-		return 403
-	end
-
 	tname = params['tname'].force_encoding('utf-8')
 	post_tok = Rack::Csrf.csrf_token(env)
-	if params['_csrf'] != post_tok
-		return 403
-	end
+	return 403 if params['_csrf'] != post_tok
 
 	ls = TeamList.new
 	thash = ls.find(tname)
-	if not thash
-		return 404
-	end
+	return 404 if not thash
 
 	tm = Team.new(tname)
+	myid = -1
+	myid = session[:auth_info].params['user_id'].to_i if session[:auth_info]
+	return 403 if !has_shuffle_permission(session) && tm.shuffle_user_id != myid
+
 	icon_ls = shuffle_icons(tm.icon_list)
 
 	m_index = 0
-	tm.members.each{|mb|
-		icon_index = m_index % icon_ls.length
-		change_icon(mb['token'], mb['secret'],
-		  Team.get_icon( icon_ls[icon_index]['name'] ))
+	members = tm.members
+	hit_i = rand(members.length)
 
+	members.each{|mb|
+		icon_index = m_index % icon_ls.length
+#		change_icon(mb['token'], mb['secret'],
+#		  Team.get_icon( icon_ls[icon_index]['name'] ))
+		
+		tm.shuffle_user_id = mb['id'] if hit_i == m_index
 		m_index += 1
 	}
 
-	"ok"
+	session[:flash_message] = "icon.shuffled"
+	redirect "/team/#{ URI.encode(tname) }"
 end
 
 def shuffle_icons(ls)

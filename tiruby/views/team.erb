@@ -41,6 +41,8 @@
 
 			<% if flash_message == 'icon.used' %>
 				<p class="fmessage">Twiterのアイコンを変更しました</p>
+			<% elsif flash_message == 'icon.shuffled' %>
+				<p class="fmessage">シャッフルを実行しました</p>
 			<% end %>
 
 			<% if is_admin %>
@@ -84,6 +86,9 @@
 				<% end %>
 			<% end %>
 		</div>
+		<% if shuffle_user %>
+			<div class="shuffle-disp">現在 <strong><%= shuffle_user['screen_name'] %></strong> がシャッフルの権利を持っています</div>
+		<% end %>
 
 		<% if in_team && has_shuffle %>
 			<div class="ti-section" style="margin-top: 1em">
