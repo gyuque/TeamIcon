@@ -584,8 +584,8 @@ post '/run-shuffle' do
 
 	members.each{|mb|
 		icon_index = m_index % icon_ls.length
-#		change_icon(mb['token'], mb['secret'],
-#		  Team.get_icon( icon_ls[icon_index]['name'] ))
+		change_icon(mb['token'], mb['secret'],
+		  Team.get_icon( icon_ls[icon_index]['name'] ))
 		
 		tm.shuffle_user_id = mb['id'] if hit_i == m_index
 		m_index += 1
